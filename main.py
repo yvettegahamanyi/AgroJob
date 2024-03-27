@@ -9,7 +9,30 @@ def view_available_farm_locations():
 def register_farm():
     # Function to register a farm
     # Get the necessary information from the user to register a farm
-        print(input('REGISTRED FARM= '))
+    
+    # Prompt user for full names of the land owner
+    owner_names = input('Enter the full names of the land owner: ')
+
+    # Prompt user for the location of the land
+    land_location = input('Enter the location of the land: ')
+
+    # Prompt user for the size of the land
+    land_size = input('Enter the size of the land (acres, hectares, etc.): ')
+
+    # Prompt user for contact information
+    contact_info = input('How can we reach you? Please provide contact details: ')
+
+    # Additional information prompt (optional)
+    additional_info = input('Are there any additional details you would like to provide? (Optional): ')
+
+    # Printing the registered farm details
+    print("Registered Farm:")
+    print("Owner's Name(s):", owner_names)
+    print("Location:", land_location)
+    print("Size of Land:", land_size)
+    print("Contact Information:", contact_info)
+    if additional_info:
+        print("Additional Information:", additional_info)
 
 
 def search_farms():
@@ -35,7 +58,7 @@ def update_crop_guide():
 while True:
     print("------ Agrojob Menu ------")
     print("1. View available farm locations")
-    print("2. Register a farm")
+    print("2. Register a cultivable land")
     print("3. Search for farms in different locations")
     print("4. Crop guide")
     print("5. Update crop guide")
