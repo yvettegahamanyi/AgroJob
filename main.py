@@ -27,14 +27,15 @@ def register_farm():
     additional_info = input('Are there any additional details you would like to provide? (Optional): ')
 
     # Printing the registered farm details
-    print("Registered Farm:")
+    print("\n\nRegistered Farm:")
     print("Owner's Name(s):", owner_names)
     print("Location:", land_location)
     print("Size of Land:", land_size)
     print("Contact Information:", contact_info)
     if additional_info:
-        print("Additional Information:", additional_info)
-
+        print("Additional Information:", additional_info, "\n")
+    else:
+        print("\n\n")
     # Store the registered farm details in a dictionary
     farm_details = {
         "Owner's Name(s)": owner_names,
@@ -59,13 +60,13 @@ def search_farms():
             found_farms.append(farm)
     
     if found_farms:
-        print("\nFound farms in", searchQuery + ":")
+        print("\nFound farms in", searchQuery + ":\n\n")
         for found_farm in found_farms:
             for key, value in found_farm.items():
                 print(key + ":", value)
-            print()
+            print("\n")
     else:
-        print("No farms found in", searchQuery)
+        print("\n\nNo farms found in", searchQuery,"\n")
 
 def crop_guide():
     # Function to display the crop guide
