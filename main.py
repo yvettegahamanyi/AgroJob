@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+registered_farms = []
 
 def view_available_farm_locations():
     # Function to view available farm locations
@@ -34,12 +35,23 @@ def register_farm():
     if additional_info:
         print("Additional Information:", additional_info)
 
+    # Store the registered farm details in a dictionary
+    farm_details = {
+        "Owner's Name(s)": owner_names,
+        "Location": land_location,
+        "Size of Land": land_size,
+        "Contact Information": contact_info,
+        "Additional Information": additional_info if additional_info else "N/A"
+    }
+
+ # Append the farm details to the list of registered farms
+    registered_farms.append(farm_details)
 
 def search_farms():
     # Function to search for farms in different locations
     print('Search farms:')
     # Get the location input from the user and display the matching farms
-
+    
 
 
 def crop_guide():
