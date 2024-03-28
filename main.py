@@ -51,8 +51,21 @@ def search_farms():
     # Function to search for farms in different locations
     print('Search farms:')
     # Get the location input from the user and display the matching farms
+    # Get the location input from the user
+    searchQuery = input('Enter the keyword to search farms with location or land size: ')
+    found_farms = []
+    for farm in registered_farms:
+        if farm["Location"].lower() == location.lower() || farm["Size of Land"].lower() == location.lower():
+            found_farms.append(farm)
     
-
+    if found_farms:
+        print("\nFound farms in", location + ":")
+        for found_farm in found_farms:
+            for key, value in found_farm.items():
+                print(key + ":", value)
+            print()
+    else:
+        print("No farms found in", location)
 
 def crop_guide():
     # Function to display the crop guide
