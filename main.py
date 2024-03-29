@@ -1,5 +1,22 @@
 #!/usr/bin/python3
+
+import mysql.connector
 registered_farms = []
+
+def connect_to_database():
+    try:
+        conn = mysql.connector.connect(
+            host="sql6.freemysqlhosting.net",
+            user="sql6695184",
+            password="xNWAebcl1q",
+            database="sql6695184",
+            port = 3306
+        )
+        print("Connected to MySQL database")
+        return conn
+    except mysql.connector.Error as e:
+        print(f"Error connecting to MySQL database: {e}")
+        return None
 
 def view_available_farm_locations():
     # Function to view available farm locations
@@ -113,31 +130,44 @@ def update_crop_guide():
      print('update crop guide:')
     # Get the updated crop guide information from the user
 
+def main():
+    # Establish database connection
+    connection = connect_to_database()
+    if not connection:
+        return
+    
+    
+    # Menu-driven application
+    while True:
+        print("------ Agrojob Menu ------")
+        print("1. View available farm locations")
+        print("2. Register a cultivable land")
+        print("3. Search for farms in different locations")
+        print("4. Crop guide")
+        print("5. Update crop guide")
+        print("6. Exit")
 
-# Menu-driven application
-while True:
-    print("------ Agrojob Menu ------")
-    print("1. View available farm locations")
-    print("2. Register a cultivable land")
-    print("3. Search for farms in different locations")
-    print("4. Crop guide")
-    print("5. Update crop guide")
-    print("6. Exit")
+        choice = input("Enter your choice (1-6): ")
 
-    choice = input("Enter your choice (1-6): ")
+        if choice == "1":
+            view_available_farm_locations()
+        elif choice == "2":
+            register_farm()
+        elif choice == "3":
+            search_farms()
+        elif choice == "4":
+            crop_guide()
+        elif choice == "5":
+            update_crop_guide()
+        elif choice == "6":
+            print("Exiting the application...")
+            break
+        else:
+            print("Invalid choice. Please enter a number from 1 to 6.")
 
-    if choice == "1":
-        view_available_farm_locations()
-    elif choice == "2":
-        register_farm()
-    elif choice == "3":
-        search_farms()
-    elif choice == "4":
-        crop_guide()
-    elif choice == "5":
-        update_crop_guide()
-    elif choice == "6":
-        print("Exiting the application...")
-        break
-    else:
-        print("Invalid choice. Please enter a number from 1 to 6.")
+    # Close database connection when exiting the program
+    connection.close()
+
+# Ensure main function is called
+if __name__ == "__main__":
+    main()
