@@ -24,9 +24,25 @@ def view_available_farm_locations():
     # Display the list of available farm locations
 
 
-def register_farm():
-    # Function to register a farm
-    # Get the necessary information from the user to register a farm
+def create_farm_table(cursor):
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS cultivating_farm (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        owner_names VARCHAR(255) NOT NULL,
+        province VARCHAR(255) NOT NULL,
+        district VARCHAR(255) NOT NULL,
+        land_size FLOAT NOT NULL,
+        contact_info VARCHAR(20) NOT NULL,
+        additional_info TEXT
+    )
+    """
+    cursor.execute(create_table_query)
+    print("Table 'cultivating_farm' created successfully")
+
+# Function to register a farm
+def register_farm(conn):
+    cursor = conn.cursor()
+    create_farm_table(cursor)
 
     # Prompt user for full names of the land owner
     while True:
@@ -77,27 +93,17 @@ def register_farm():
     # Additional information prompt (optional)
     additional_info = input('Enter any additional information (Optional): ').strip()
 
-    # Printing the registered farm details
-    print("\n\nRegistered Farm:")
-    print("Owner's Name(s):", owner_names)
-    print("Province:", land_province)
-    print("District:", land_district)
-    print("Size of Land (hectares):", land_size)
-    print("Contact Information:", contact_info)
-    if additional_info:
-        print("Additional Information:", additional_info, "\n")
-    else:
-        print("\n\n")
+    # Insert farm details into the database
+    insert_query = """
+    INSERT INTO cultivating_farm (owner_names, province, district, land_size, contact_info, additional_info)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    farm_data = (owner_names, land_province, land_district, float(land_size), contact_info, additional_info)
+    cursor.execute(insert_query, farm_data)
+    conn.commit()
+    print("Registered Farm inserted into the database successfully")
 
-    # Store the registered farm details in a dictionary
-    farm_details = {
-        "Owner's Name(s)": owner_names,
-        "Province": land_province,
-        "District": land_district,
-        "Size of Land (hectares)": land_size,
-        "Contact Information": contact_info,
-        "Additional Information": additional_info if additional_info else "N/A"
-    }
+    cursor.close()
 
 def search_farms():
     # Function to search for farms in different locations
@@ -140,7 +146,7 @@ def main():
     # Menu-driven application
     while True:
         print("------ Agrojob Menu ------")
-        print("1. View available farm locations")
+        print("1. View available cultivable land")
         print("2. Register a cultivable land")
         print("3. Search for farms in different locations")
         print("4. Crop guide")
@@ -152,7 +158,7 @@ def main():
         if choice == "1":
             view_available_farm_locations()
         elif choice == "2":
-            register_farm()
+            register_farm(connection)
         elif choice == "3":
             search_farms()
         elif choice == "4":
