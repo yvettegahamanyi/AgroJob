@@ -252,7 +252,7 @@ def main():
         print("6. Update crop guide")
         print("7. Exit")
 
-        choice = input("Enter your choice (1-6): ")
+        choice = input("Enter your choice (1-7): ")
 
         if choice == "1":
             view_available_cultivable_land(connection)
