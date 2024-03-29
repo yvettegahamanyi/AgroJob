@@ -229,6 +229,11 @@ def view_crop_guides(connection):
     except mysql.connector.Error as e:
         print(f"Error fetching data from MySQL database: {e}")
     
+
+def update_crop_guide():
+    print("Update Crop Guide:")
+
+
 def main():
     # Establish database connection
     connection = connect_to_database()
