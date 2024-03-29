@@ -207,7 +207,28 @@ def crop_guide(conn):
     conn.commit()
     print("Crop Guide inserted into the database successfully")
 
+def view_crop_guides(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM crop_guide")
+        rows = cursor.fetchall()
 
+        if not rows:
+            print("No crop guides available.")
+            return
+
+        # Create a PrettyTable to display the data in a tabular format
+        table = PrettyTable()
+        table.field_names = ["ID", "Crop Name", "Growing conditions", "Planting Care", "Pest Management", "Harvest Storage"]
+
+        for row in rows:
+            table.add_row(row)
+
+        print(table)
+
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
+    
 def main():
     # Establish database connection
     connection = connect_to_database()
@@ -221,9 +242,10 @@ def main():
         print("1. View available cultivable land")
         print("2. Register a cultivable land")
         print("3. Search for farms in different locations")
-        print("4. Crop guide")
-        print("5. Update crop guide")
-        print("6. Exit")
+        print("4. Create Crop guide")
+        print("5. View all crop guides")
+        print("6. Update crop guide")
+        print("7. Exit")
 
         choice = input("Enter your choice (1-6): ")
 
@@ -236,8 +258,10 @@ def main():
         elif choice == "4":
             crop_guide(connection)
         elif choice == "5":
-            update_crop_guide()
+            view_crop_guides(connection)
         elif choice == "6":
+            update_crop_guide()
+        elif choice == "7":
             print("Exiting the application...")
             break
         else:
