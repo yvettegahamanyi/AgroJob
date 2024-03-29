@@ -131,10 +131,90 @@ def crop_guide():
     # Display the crop guide information
 
 
-def update_crop_guide():
-    # Function to update the crop guide
-     print('update crop guide:')
-    # Get the updated crop guide information from the user
+class CropGuide:
+    def __init__(self, name, cultivation_technique, soil_type, fertilizers, inputs_required, anchorage, estimated_harvest, income_expected):
+        """
+        Initialize a CropGuide object with the given attributes.
+
+        Parameters:
+            name (str): The name of the crop.
+            cultivation_technique (str): The technique used for cultivation.
+            soil_type (str): The type of soil required for the crop.
+            fertilizers (str): The type of fertilizers needed.
+            inputs_required (list): List of inputs required for cultivation (e.g., seeds, water, etc.).
+            anchorage (str): The anchorage system of the crop.
+            estimated_harvest (str): The estimated time for harvest.
+            income_expected (str): The expected income from the crop.
+        """
+        self.name = name
+        self.cultivation_technique = cultivation_technique
+        self.soil_type = soil_type
+        self.fertilizers = fertilizers
+        self.inputs_required = inputs_required
+        self.anchorage = anchorage
+        self.estimated_harvest = estimated_harvest
+        self.income_expected = income_expected
+
+    def update_info(self, **kwargs):
+        """
+        Update the attributes of the CropGuide object.
+
+        Parameters:
+            **kwargs: Keyword arguments with attribute names as keys and new values as values.
+
+        Raises:
+            AttributeError: If an attribute that does not exist is provided.
+        """
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"'CropGuide' object has no attribute '{key}'")
+
+    def __str__(self):
+        """
+        Return a string representation of the CropGuide object.
+        """
+        return (
+            f"Crop: {self.name}\n"
+            f"Cultivation Technique: {self.cultivation_technique}\n"
+            f"Soil Type: {self.soil_type}\n"
+            f"Fertilizers: {self.fertilizers}\n"
+            f"Inputs Required: {', '.join(self.inputs_required)}\n"
+            f"Anchorage: {self.anchorage}\n"
+            f"Estimated Harvest: {self.estimated_harvest}\n"
+            f"Income Expected: {self.income_expected}"
+        )
+
+
+def main():
+    # Create an instance of CropGuide
+    crop_guide = CropGuide(
+        name="Corn",
+        cultivation_technique="Planting in rows",
+        soil_type="Loamy soil",
+        fertilizers="NPK fertilizer",
+        inputs_required=["Seeds", "Water", "Sunlight"],
+        anchorage="Strong root system",
+        estimated_harvest="4-5 months after planting",
+        income_expected="$1000 per acre"
+    )
+
+    # Print crop guide information
+    print("Crop Guide Information:")
+    print(crop_guide)
+
+    # Update crop guide information
+    crop_guide.update_info(income_expected="$1200 per acre", soil_type="Sandy loam")
+
+    # Print updated crop guide information
+    print("\nUpdated Crop Guide Information:")
+    print(crop_guide)
+
+
+if __name__ == "__main__":
+    main()
+
 
 def main():
     # Establish database connection
