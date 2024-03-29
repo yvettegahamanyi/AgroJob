@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import mysql.connector
+from prettytable import PrettyTable
 registered_farms = []
 
 def connect_to_database():
@@ -18,10 +19,29 @@ def connect_to_database():
         print(f"Error connecting to MySQL database: {e}")
         return None
 
-def view_available_farm_locations():
-    # Function to view available farm locations
-        print("Available farm locations:")
-    # Display the list of available farm locations
+def view_available_cultivable_land(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM cultivating_farm")
+        rows = cursor.fetchall()
+
+        if not rows:
+            print("No cultivable land available.")
+            return
+
+        # Create a PrettyTable to display the data in a tabular format
+        table = PrettyTable()
+        table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+        
+        for row in rows:
+            table.add_row(row)
+
+        print(table)
+
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
+
+
 
 
 def create_farm_table(cursor):
@@ -208,7 +228,7 @@ def main():
         choice = input("Enter your choice (1-6): ")
 
         if choice == "1":
-            view_available_farm_locations()
+            view_available_cultivable_land(connection)
         elif choice == "2":
             register_farm(connection)
         elif choice == "3":
