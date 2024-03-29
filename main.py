@@ -124,7 +124,7 @@ def search_farms():
             print("\n")
     else:
         print("\n\nNo farms found in", searchQuery,"\n")
-#!/usr/bin/python3
+
 def crop_guide():
     # Function to display the crop guide
     print("Crop Guide Information:\n")
@@ -184,8 +184,6 @@ def crop_guide():
     print("\nHarvest & Storage:")
     print(f"- Harvest determination method: {harvest_determination}")
     print(f"- Storage plans: {storage_plans}")
-# Call the crop_guide function
-crop_guide()
 
 
 
@@ -268,10 +266,6 @@ def main():
     # Print updated crop guide information
     print("\nUpdated Crop Guide Information:")
     print(crop_guide)
-
-
-if __name__ == "__main__":
-    main()
 
 
 def main():
