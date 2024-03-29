@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import mysql.connector
+from prettytable import PrettyTable
 registered_farms = []
 
 def connect_to_database():
@@ -18,10 +19,29 @@ def connect_to_database():
         print(f"Error connecting to MySQL database: {e}")
         return None
 
-def view_available_farm_locations():
-    # Function to view available farm locations
-        print("Available farm locations:")
-    # Display the list of available farm locations
+def view_available_cultivable_land(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM cultivating_farm")
+        rows = cursor.fetchall()
+
+        if not rows:
+            print("No cultivable land available.")
+            return
+
+        # Create a PrettyTable to display the data in a tabular format
+        table = PrettyTable()
+        table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+        
+        for row in rows:
+            table.add_row(row)
+
+        print(table)
+
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
+
+
 
 
 def create_farm_table(cursor):
@@ -125,63 +145,62 @@ def search_farms():
     else:
         print("\n\nNo farms found in", searchQuery,"\n")
 
+<<<<<<< HEAD
 def crop_guide():
     # Function to display the crop guide
+=======
+# Function to display the crop guide
+
+def create_crop_guide_table(cursor):
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS crop_guide (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        crop_name VARCHAR(255) UNIQUE,
+        growing_conditions TEXT,
+        planting_care TEXT,
+        pest_management TEXT,
+        harvest_storage TEXT
+    )
+    """
+    cursor.execute(create_table_query)
+    print("Table 'crop_guide' created successfully")
+    
+def crop_guide(conn):
+    cursor = conn.cursor()
+    create_crop_guide_table(cursor)
+>>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
     print("Crop Guide Information:\n")
-    print("Crop Information:")
-    crop = input("What crop are you planning to plant?\n")
-    crop_description = input("Give a brief description of that crop:\n")
+
+    # Get crop information
+    crop_name = input("What crop are you planning to plant? (Crop Name - must be unique)\n")
+
+    # Get growing conditions
     print("\nGrowing Conditions:")
-    soil_conditions = input("What are the soil conditions of the plant?\n")
-    temperature_range = input("What are the temperature requirements?\n")
-    print("\nClimate & Timing:")
-    planting_timing = input("When do you plan to plant the crop?\n")
-    print("\nSeed & Variety:")
-    seed_type = input("What type of seeds are you using (e.g., heirloom, hybrid)?\n")
-    specific_variety = input("Are there any specific varieties you've chosen?\n")
-    print("\nPlanting Depth & Spacing:")
-    planting_depth = input("How deep should you plant the seeds?\n")
-    spacing = input("How much space should there be between plants and rows?\n")
-    print("\nWatering & Irrigation:")
-    watering_frequency = input("How often do you plan to water the crop?\n")
-    irrigation_method = input("What method of irrigation do you intend to use?\n")
-    print("\nFertilization:")
-    fertilizer_type = input("Do you plan to use fertilizer, and if so, what type?\n")
-    fertilization_frequency = input("How often do you plan to fertilize the crop?\n")
-    print("\nWeed & Pest Management:")
-    weed_management_methods = input("What methods will you use to control weeds?\n")
-    pest_diseases = input("Are there any common pests or diseases you need to manage?\n")
-    print("\nSupport Structures:")
-    support_structures = input("Does this crop require any support structures (e.g., trellises, stakes)?\n")
+    growing_conditions = input("Describe the ideal growing conditions for this crop:\n")
+
+    # Get planting and care information
+    print("\nPlanting & Care:")
+    planting_care = input("Provide information on planting depth, spacing, and care instructions:\n")
+
+    # Get pest management information
+    print("\nPest Management:")
+    pest_management = input("What methods will you use to manage pests and diseases?\n")
+
+    # Get harvest and storage information
     print("\nHarvest & Storage:")
-    harvest_determination = input("How will you determine when the crop is ready for harvest?\n")
-    storage_plans = input("What are your plans for storing the harvested crop?\n")
+    harvest_storage = input("How will you determine when to harvest the crop and what are your storage plans?\n")
+
     # Print the collected information
     print("\nCrop Guide:")
-    print("Crop Information:")
-    print(f"- Crop: {crop}")
+    print(f"Crop Name: {crop_name}")
     print("\nGrowing Conditions:")
-    print(f"- Soil conditions: {soil_conditions}")
-    print("\nClimate & Timing:")
-    print(f"- Planting timing: {planting_timing}")
-    print("\nSeed & Variety:")
-    print(f"- Seed type: {seed_type}")
-    print(f"- Specific variety: {specific_variety}")
-    print("\nPlanting Depth & Spacing:")
-    print(f"- Planting depth: {planting_depth}")
-    print(f"- Spacing between plants and rows: {spacing}")
-    print("\nWatering & Irrigation:")
-    print(f"- Watering frequency: {watering_frequency}")
-    print(f"- Irrigation method: {irrigation_method}")
-    print("\nFertilization:")
-    print(f"- Fertilizer type: {fertilizer_type}")
-    print(f"- Fertilization frequency: {fertilization_frequency}")
-    print("\nWeed & Pest Management:")
-    print(f"- Weed management methods: {weed_management_methods}")
-    print(f"- Pests and diseases: {pest_diseases}")
-    print("\nSupport Structures:")
-    print(f"- Support structures required: {support_structures}")
+    print(growing_conditions)
+    print("\nPlanting & Care:")
+    print(planting_care)
+    print("\nPest Management:")
+    print(pest_management)
     print("\nHarvest & Storage:")
+<<<<<<< HEAD
     print(f"- Harvest determination method: {harvest_determination}")
     print(f"- Storage plans: {storage_plans}")
 
@@ -241,33 +260,50 @@ class CropGuide:
             f"Estimated Harvest: {self.estimated_harvest}\n"
             f"Income Expected: {self.income_expected}"
         )
+=======
+    print(harvest_storage)
+
+    # Insert crop guide information into the database
+    insert_query = """
+    INSERT INTO crop_guide (crop_name, growing_conditions, planting_care, pest_management, harvest_storage)
+    VALUES (%s, %s, %s, %s, %s)
+    """
+    crop_guide_data = (crop_name, growing_conditions, planting_care, pest_management, harvest_storage)
+    cursor.execute(insert_query, crop_guide_data)
+    conn.commit()
+    print("Crop Guide inserted into the database successfully")
+>>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
+
+def view_crop_guides(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM crop_guide")
+        rows = cursor.fetchall()
+
+        if not rows:
+            print("No crop guides available.")
+            return
+
+        # Create a PrettyTable to display the data in a tabular format
+        table = PrettyTable()
+        table.field_names = ["ID", "Crop Name", "Growing conditions", "Planting Care", "Pest Management", "Harvest Storage"]
+
+        for row in rows:
+            table.add_row(row)
+
+        print(table)
+
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
+    
+
+<<<<<<< HEAD
+=======
+def update_crop_guide():
+    print("Update Crop Guide:")
 
 
-def main():
-    # Create an instance of CropGuide
-    crop_guide = CropGuide(
-        name="Corn",
-        cultivation_technique="Planting in rows",
-        soil_type="Loamy soil",
-        fertilizers="NPK fertilizer",
-        inputs_required=["Seeds", "Water", "Sunlight"],
-        anchorage="Strong root system",
-        estimated_harvest="4-5 months after planting",
-        income_expected="$1000 per acre"
-    )
-
-    # Print crop guide information
-    print("Crop Guide Information:")
-    print(crop_guide)
-
-    # Update crop guide information
-    crop_guide.update_info(income_expected="$1200 per acre", soil_type="Sandy loam")
-
-    # Print updated crop guide information
-    print("\nUpdated Crop Guide Information:")
-    print(crop_guide)
-
-
+>>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
 def main():
     # Establish database connection
     connection = connect_to_database()
@@ -281,23 +317,26 @@ def main():
         print("1. View available cultivable land")
         print("2. Register a cultivable land")
         print("3. Search for farms in different locations")
-        print("4. Crop guide")
-        print("5. Update crop guide")
-        print("6. Exit")
+        print("4. Create Crop guide")
+        print("5. View all crop guides")
+        print("6. Update crop guide")
+        print("7. Exit")
 
-        choice = input("Enter your choice (1-6): ")
+        choice = input("Enter your choice (1-7): ")
 
         if choice == "1":
-            view_available_farm_locations()
+            view_available_cultivable_land(connection)
         elif choice == "2":
             register_farm(connection)
         elif choice == "3":
             search_farms()
         elif choice == "4":
-            crop_guide()
+            crop_guide(connection)
         elif choice == "5":
-            update_crop_guide()
+            view_crop_guides(connection)
         elif choice == "6":
+            update_crop_guide()
+        elif choice == "7":
             print("Exiting the application...")
             break
         else:
