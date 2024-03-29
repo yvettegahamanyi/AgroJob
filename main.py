@@ -10,43 +10,77 @@ def view_available_farm_locations():
 def register_farm():
     # Function to register a farm
     # Get the necessary information from the user to register a farm
-    
+
     # Prompt user for full names of the land owner
-    owner_names = input('Enter the full names of the land owner: ')
+    while True:
+        owner_names = input('Enter the full names of the land owner (at least 2 names): ').strip()
+        if len(owner_names.split()) >= 2 and all(name.isalpha() for name in owner_names.split()):
+            break
+        else:
+            print("Please enter at least 2 names (alphabetical characters only).")
 
-    # Prompt user for the location of the land
-    land_location = input('Enter the location of the land: ')
+    # Dictionary of provinces and corresponding districts
+    province_districts = {
+        "Kigali": ["Nyarugenge", "Kicukiro", "Gasabo"],
+        "Eastern Province": ["Kirehe", "Bugesera", "Ngoma"],
+        "Western Province": ["Karongi", "Nyamasheke", "Rutsiro"]
+    }
 
-    # Prompt user for the size of the land
-    land_size = input('Enter the size of the land (acres, hectares, etc.): ')
+    # Prompt user for the province of the location of the land (multiple choice)
+    print("Choose the province of the location of the land:")
+    for i, province in enumerate(province_districts.keys(), 1):
+        print(f"{i}. {province}")
+    province_choice = int(input("Enter the number corresponding to the province: "))
+    land_province = list(province_districts.keys())[province_choice - 1]
+
+    # Prompt user for the district of the location of the land (based on province selection)
+    print("Choose the district of the location of the land:")
+    districts = province_districts[land_province]
+    for i, district in enumerate(districts, 1):
+        print(f"{i}. {district}")
+    district_choice = int(input("Enter the number corresponding to the district: "))
+    land_district = districts[district_choice - 1]
+
+    # Prompt user for the size of the land in hectares
+    while True:
+        land_size = input('Enter the size of the land (in hectares): ').strip()
+        if land_size.replace('.', '').isdigit():
+            break
+        else:
+            print("Please enter a valid numeric value for land size.")
 
     # Prompt user for contact information
-    contact_info = input('How can we reach you? Please provide contact details: ')
+    while True:
+        contact_info = input('Enter the contact information (10-digit phone number starting with 07): ').strip()
+        if len(contact_info) == 10 and contact_info.startswith("07") and contact_info[2:].isdigit():
+            break
+        else:
+            print("Please enter a valid 10-digit phone number starting with 07.")
 
     # Additional information prompt (optional)
-    additional_info = input('Are there any additional details you would like to provide? (Optional): ')
+    additional_info = input('Enter any additional information (Optional): ').strip()
 
     # Printing the registered farm details
     print("\n\nRegistered Farm:")
     print("Owner's Name(s):", owner_names)
-    print("Location:", land_location)
-    print("Size of Land:", land_size)
+    print("Province:", land_province)
+    print("District:", land_district)
+    print("Size of Land (hectares):", land_size)
     print("Contact Information:", contact_info)
     if additional_info:
         print("Additional Information:", additional_info, "\n")
     else:
         print("\n\n")
+
     # Store the registered farm details in a dictionary
     farm_details = {
         "Owner's Name(s)": owner_names,
-        "Location": land_location,
-        "Size of Land": land_size,
+        "Province": land_province,
+        "District": land_district,
+        "Size of Land (hectares)": land_size,
         "Contact Information": contact_info,
         "Additional Information": additional_info if additional_info else "N/A"
     }
-
- # Append the farm details to the list of registered farms
-    registered_farms.append(farm_details)
 
 def search_farms():
     # Function to search for farms in different locations
