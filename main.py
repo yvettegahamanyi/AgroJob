@@ -32,7 +32,7 @@ def view_available_cultivable_land(connection):
         # Create a PrettyTable to display the data in a tabular format
         table = PrettyTable()
         table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
-        
+
         for row in rows:
             table.add_row(row)
 
@@ -135,7 +135,7 @@ def search_farms():
     for farm in registered_farms:
         if farm["Location"].lower() == searchQuery.lower() or farm["Size of Land"].lower() == searchQuery.lower():
             found_farms.append(farm)
-    
+
     if found_farms:
         print("\nFound farms in", searchQuery + ":\n\n")
         for found_farm in found_farms:
@@ -160,7 +160,7 @@ def create_crop_guide_table(cursor):
     """
     cursor.execute(create_table_query)
     print("Table 'crop_guide' created successfully")
-    
+
 def crop_guide(conn):
     cursor = conn.cursor()
     create_crop_guide_table(cursor)
@@ -228,19 +228,49 @@ def view_crop_guides(connection):
 
     except mysql.connector.Error as e:
         print(f"Error fetching data from MySQL database: {e}")
-    
+
 
 def update_crop_guide():
-    print("Update Crop Guide:")
+    print("Update Crop Guide:"
+            )
+def update_crop_guide(conn, crop_name):
+    cursor = conn.cursor()
+    # cursor.execute()
 
+    # Check if the crop exists in the database
+    cursor.execute("SELECT * FROM crop_guide WHERE crop_name=%s", (crop_name,))
+    existing_crop = cursor.fetchone()
+
+    if existing_crop:
+        print(f"Updating information for {crop_name}:\n")
+        # Get growing conditions
+        growing_conditions = input("Describe the ideal growing conditions for this crop:\n")
+
+        # Get planting and care information
+        planting_care = input("Provide information on planting depth, spacing, and care instructions:\n")
+
+        # Get pest management information
+        pest_management = input("What methods will you use to manage pests and diseases?\n")
+
+        # Get harvest and storage information
+        harvest_storage = input("How will you determine when to harvest the crop and what are your storage plans?\n")
+
+        # Update information in the database
+        cursor.execute("UPDATE crop_guide SET growing_conditions=%s, planting_care=%s, pest_management=%s, harvest_storage=%s WHERE crop_name=%s",
+                       (growing_conditions, planting_care, pest_management, harvest_storage, crop_name))
+        conn.commit()
+
+        print("\nCrop guide updated successfully!")
+    else:
+        print(f"Error: {crop_name} does not exist in the crop guide.")
 
 def main():
     # Establish database connection
     connection = connect_to_database()
     if not connection:
         return
-    
-    
+
+
     # Menu-driven application
     while True:
         print("------ Agrojob Menu ------")
@@ -259,13 +289,14 @@ def main():
         elif choice == "2":
             register_farm(connection)
         elif choice == "3":
-            search_farms()
+            search_farms(connection)
         elif choice == "4":
             crop_guide(connection)
         elif choice == "5":
             view_crop_guides(connection)
         elif choice == "6":
-            update_crop_guide()
+            crop_name=input("Enter crop name: ")
+            update_crop_guide(connection,crop_name)
         elif choice == "7":
             print("Exiting the application...")
             break
@@ -278,3 +309,4 @@ def main():
 # Ensure main function is called
 if __name__ == "__main__":
     main()
+
