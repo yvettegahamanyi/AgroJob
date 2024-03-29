@@ -78,6 +78,55 @@ def update_crop_guide():
     # Function to update the crop guide
      print('update crop guide:')
     # Get the updated crop guide information from the user
+ass CropGuide:
+
+    def __init__(self, name, cultivation_technique, soil_type, fertilizers, inputs_required, anchorage, estimated_harvest, income_expected):
+
+    print("Crop: ", name)
+    print("Cultivation Technique: ", cultivation_technique)
+    print("Soil Type: ", soil_type)
+    print("Fertilizer: ", fertiliser)
+    print("Inputs Required: ", inputs_required)
+    print("Anchorage: ", anchorage)
+    print("Estimated Harvest: ", estimated_harvest)
+    print("Income Expected: ", income_expected)
+        
+    def update_info(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"'CropGuide' object has no attribute '{key}'")
+
+    def __str__(self):
+       
+def main():
+    # Create an instance of CropGuide
+    crop_guide = CropGuide(
+        name="Corn",
+        cultivation_technique="Planting in rows",
+        soil_type="Loamy soil",
+        fertilizers="NPK fertilizer",
+        inputs_required=["Seeds", "Water", "Sunlight"],
+        anchorage="Strong root system",
+        estimated_harvest="4-5 months after planting",
+        income_expected="$3000 per month"
+    )
+
+    # Print initial crop guide information
+    print("Initial Crop Guide Information:")
+    print(crop_guide)
+
+    # Update crop guide information
+    crop_guide.update_info(income_expected="$1200 per acre", soil_type="clay loam")
+
+    # Print updated crop guide information
+    print("\nUpdated Crop Guide Information:")
+    print(crop_guide)
+
+
+if __name__ == "__main__":
+    main()
 
 
 # Menu-driven application
