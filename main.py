@@ -152,6 +152,35 @@ def search_farms(connection):
     else:
         print("\nNo farms found matching the keyword.\n")
 
+# Function to search crop guide
+def search_crop_guide(connection):
+    try:
+        cursor = connection.cursor(dictionary=True)
+        search_query = input("Enter the keyword to search the crop guide: ")
+
+        search_query = f"%{search_query}%"  # Wildcard search
+
+        select_query = """
+        SELECT * FROM crop_guide
+        WHERE crop_name LIKE %s OR growing_conditions LIKE %s OR planting_care LIKE %s OR pest_management LIKE %s OR harvest_storage LIKE %s
+        """
+        cursor.execute(select_query, (search_query, search_query, search_query, search_query, search_query))
+        results = cursor.fetchall()
+
+        if results:
+            print("\nFound matching crop guide:\n")
+            table = PrettyTable()
+            table.field_names = ["Crop Name", "Growing Conditions", "Planting Care", "Pest Management", "Harvest Storage"]
+            for result in results:
+                table.add_row([result["crop_name"], result["growing_conditions"], result["planting_care"], result["pest_management"], result["harvest_storage"]])
+            print(table)
+            print("\n")
+        else:
+            print("\nNo crop guide found matching the keyword.\n")
+
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
+
 # Function to display the crop guide
 
 def create_crop_guide_table(cursor):
@@ -287,7 +316,8 @@ def main():
         print("4. Create Crop guide")
         print("5. View all crop guides")
         print("6. Update crop guide")
-        print("7. Exit")
+        print("7. Search crop guide")
+        print("8. Exit")
 
         choice = input("Enter your choice (1-7): ")
 
@@ -305,6 +335,8 @@ def main():
             crop_name=input("Enter crop name: ")
             update_crop_guide(connection,crop_name)
         elif choice == "7":
+            search_crop_guide(connection)
+        elif choice == "8":
             print("Exiting the application...")
             break
         else:
