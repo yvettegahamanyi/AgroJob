@@ -243,6 +243,7 @@ def crop_guide(conn):
     conn.commit()
     print("Crop Guide inserted into the database successfully")
 
+
 def view_crop_guides(connection):
     try:
         cursor = connection.cursor()
