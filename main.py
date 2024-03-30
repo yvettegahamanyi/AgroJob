@@ -125,30 +125,33 @@ def register_farm(conn):
 
     cursor.close()
 
-def search_farms():
+def search_farms(connection):
     # Function to search for farms in different locations
     print('Search farms:')
-    # Get the location input from the user and display the matching farms
-    # Get the location input from the user
-    searchQuery = input('Enter the keyword to search farms with location or land size: ')
-    found_farms = []
-    for farm in registered_farms:
-        if farm["Location"].lower() == searchQuery.lower() or farm["Size of Land"].lower() == searchQuery.lower():
-            found_farms.append(farm)
+    # Get the keyword input from the user
+    search_query = input('Enter the keyword to search farms with location or land size: ')
+
+    # Execute a query to search for farms matching the keyword
+    cursor = connection.cursor(dictionary=True)
+    search_query = f"%{search_query}%"  # Wildcard search
+    select_query = """
+    SELECT * FROM cultivating_farm
+    WHERE owner_names LIKE %s OR province LIKE %s OR district LIKE %s OR land_size LIKE %s OR contact_info LIKE %s OR additional_info LIKE %s
+    """
+    cursor.execute(select_query, (search_query, search_query, search_query, search_query, search_query, search_query))
+    found_farms = cursor.fetchall()
+    cursor.close()
 
     if found_farms:
-        print("\nFound farms in", searchQuery + ":\n\n")
+        print("\nFound farms matching the keyword:\n")
+        table = PrettyTable()
+        table.field_names = ["Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
         for found_farm in found_farms:
-            for key, value in found_farm.items():
-                print(key + ":", value)
-            print("\n")
+            table.add_row([found_farm["owner_names"], found_farm["province"], found_farm["district"], found_farm["land_size"], found_farm["contact_info"], found_farm["additional_info"]])
+        print(table)
     else:
-        print("\n\nNo farms found in", searchQuery,"\n")
+        print("\nNo farms found matching the keyword.\n")
 
-<<<<<<< HEAD
-def crop_guide():
-    # Function to display the crop guide
-=======
 # Function to display the crop guide
 
 def create_crop_guide_table(cursor):
@@ -168,7 +171,6 @@ def create_crop_guide_table(cursor):
 def crop_guide(conn):
     cursor = conn.cursor()
     create_crop_guide_table(cursor)
->>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
     print("Crop Guide Information:\n")
 
     # Get crop information
@@ -200,67 +202,6 @@ def crop_guide(conn):
     print("\nPest Management:")
     print(pest_management)
     print("\nHarvest & Storage:")
-<<<<<<< HEAD
-    print(f"- Harvest determination method: {harvest_determination}")
-    print(f"- Storage plans: {storage_plans}")
-
-
-
-class CropGuide:
-    def __init__(self, name, cultivation_technique, soil_type, fertilizers, inputs_required, anchorage, estimated_harvest, income_expected):
-        """
-        Initialize a CropGuide object with the given attributes.
-
-        Parameters:
-            name (str): The name of the crop.
-            cultivation_technique (str): The technique used for cultivation.
-            soil_type (str): The type of soil required for the crop.
-            fertilizers (str): The type of fertilizers needed.
-            inputs_required (list): List of inputs required for cultivation (e.g., seeds, water, etc.).
-            anchorage (str): The anchorage system of the crop.
-            estimated_harvest (str): The estimated time for harvest.
-            income_expected (str): The expected income from the crop.
-        """
-        self.name = name
-        self.cultivation_technique = cultivation_technique
-        self.soil_type = soil_type
-        self.fertilizers = fertilizers
-        self.inputs_required = inputs_required
-        self.anchorage = anchorage
-        self.estimated_harvest = estimated_harvest
-        self.income_expected = income_expected
-
-    def update_info(self, **kwargs):
-        """
-        Update the attributes of the CropGuide object.
-
-        Parameters:
-            **kwargs: Keyword arguments with attribute names as keys and new values as values.
-
-        Raises:
-            AttributeError: If an attribute that does not exist is provided.
-        """
-        for key, value in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                raise AttributeError(f"'CropGuide' object has no attribute '{key}'")
-
-    def __str__(self):
-        """
-        Return a string representation of the CropGuide object.
-        """
-        return (
-            f"Crop: {self.name}\n"
-            f"Cultivation Technique: {self.cultivation_technique}\n"
-            f"Soil Type: {self.soil_type}\n"
-            f"Fertilizers: {self.fertilizers}\n"
-            f"Inputs Required: {', '.join(self.inputs_required)}\n"
-            f"Anchorage: {self.anchorage}\n"
-            f"Estimated Harvest: {self.estimated_harvest}\n"
-            f"Income Expected: {self.income_expected}"
-        )
-=======
     print(harvest_storage)
 
     # Insert crop guide information into the database
@@ -272,7 +213,6 @@ class CropGuide:
     cursor.execute(insert_query, crop_guide_data)
     conn.commit()
     print("Crop Guide inserted into the database successfully")
->>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
 
 def view_crop_guides(connection):
     try:
@@ -297,8 +237,6 @@ def view_crop_guides(connection):
         print(f"Error fetching data from MySQL database: {e}")
 
 
-<<<<<<< HEAD
-=======
 def update_crop_guide():
     print("Update Crop Guide:"
             )
@@ -333,7 +271,6 @@ def update_crop_guide(conn, crop_name):
     else:
         print(f"Error: {crop_name} does not exist in the crop guide.")
 
->>>>>>> b5a63bd40c30242b6ef6d128ac09003e941ea7e2
 def main():
     # Establish database connection
     connection = connect_to_database()
@@ -379,7 +316,3 @@ def main():
 # Ensure main function is called
 if __name__ == "__main__":
     main()
-<<<<<<< HEAD
-
-=======
->>>>>>> 3fb9f2786db305ace73d353bd472db95948acea9
