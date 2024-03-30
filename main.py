@@ -342,6 +342,18 @@ def main():
             break
         else:
             print("Invalid choice. Please enter a number from 1 to 6.")
+            feedback = input("Did you enjoy using the program? (yes/no): ").lower()
+            if feedback == "yes":
+                improvement = input("Are there any improvements you'd like to suggest? (yes/no): ").lower()
+                if improvement == "yes":
+                    print("Thank you for your feedback! Please enter your suggestions below:")
+                    user_suggestion = input()
+                    print("Thanks for your inputs. We appreciate your suggestions!")
+            elif feedback == "no":
+                improvement = input("What can we do to improve the system for a better experience next time? ")
+                print("Thank you for your feedback. We'll work on improving the system.")
+            else:
+                print("Invalid response. Exiting the program without feedback.")
 
     # Close database connection when exiting the program
     connection.close()
