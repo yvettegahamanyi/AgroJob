@@ -18,35 +18,40 @@ def connect_to_database():
     except mysql.connector.Error as e:
         print(f"Error connecting to MySQL database: {e}")
         return None
+class Farm:
+    def __init__(self):
+        self.connection = self.connect_to_database()
 
-def view_available_cultivable_land(connection):
-    try:
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM cultivating_farm")
-        rows = cursor.fetchall()
+    def view_available_cultivable_land(connection):
 
-        if not rows:
-            print("No cultivable land available.")
-            return
+        try:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM cultivating_farm")
+            rows = cursor.fetchall()
 
-        # Create a PrettyTable to display the data in a tabular format
-        table = PrettyTable()
-        table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+            if not rows:
+                print("No cultivable land available.")
+                return
 
-        for row in rows:
-            table.add_row(row)
+            # Create a PrettyTable to display the data in a tabular format
+            table = PrettyTable()
+            table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
 
-        print(table)
+            for row in rows:
+                table.add_row(row)
 
-    except mysql.connector.Error as e:
-        print(f"Error fetching data from MySQL database: {e}")
+            print(table)
+        
+
+        except mysql.connector.Error as e:
+            print(f"Error fetching data from MySQL database: {e}")
+        
 
 
+    def create_farm_table(cursor):
 
-
-def create_farm_table(cursor):
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS cultivating_farm (
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS cultivating_farm (
         id INT AUTO_INCREMENT PRIMARY KEY,
         owner_names VARCHAR(255) NOT NULL,
         province VARCHAR(255) NOT NULL,
@@ -54,12 +59,14 @@ def create_farm_table(cursor):
         land_size FLOAT NOT NULL,
         contact_info VARCHAR(20) NOT NULL,
         additional_info TEXT
-    )
-    """
-    cursor.execute(create_table_query)
-    print("Table 'cultivating_farm' created successfully")
+        )
+        """
+        cursor.execute(create_table_query)
+        print("Table 'cultivating_farm' created successfully")
 
+    
 # Function to register a farm
+    
 def register_farm(conn):
     cursor = conn.cursor()
     create_farm_table(cursor)
