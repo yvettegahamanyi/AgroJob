@@ -330,7 +330,7 @@ def main():
         choice = input("Enter your choice (1-7): ")
 
         if choice == "1":
-            view_available_cultivable_land(connection)
+           Farm.view_available_cultivable_land(connection)
         elif choice == "2":
             register_farm(connection)
         elif choice == "3":
