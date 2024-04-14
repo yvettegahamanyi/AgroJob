@@ -7,10 +7,10 @@ registered_farms = []
 def connect_to_database():
     try:
         conn = mysql.connector.connect(
-            host="sql6.freemysqlhosting.net",
-            user="sql6695184",
-            password="xNWAebcl1q",
-            database="sql6695184",
+            host="sql11.freemysqlhosting.net",
+            user="sql11698952",
+            password="DMwqmetqsW",
+            database="sql11698952",
             port = 3306
         )
         print("Connected to MySQL database")
@@ -346,6 +346,18 @@ def main():
             search_crop_guide(connection)
         elif choice == "8":
             print("Exiting the application...")
+            feedback = input("Did you enjoy using the program? (yes/no): ").lower()
+            if feedback == "yes":
+                improvement = input("Are there any improvements you'd like to suggest? (yes/no): ").lower()
+                if improvement == "yes":
+                    print("Thank you for your feedback! Please enter your suggestions below:")
+                    user_suggestion = input()
+                    print("Thanks for your inputs. We appreciate your suggestions!")
+            elif feedback == "no":
+                improvement = input("What can we do to improve the system for a better experience next time? ")
+                print("Thank you for your feedback. We'll work on improving the system.")
+            else:
+                print("Invalid response. Exiting the program without feedback.")
             break
         else:
             print("Invalid choice. Please enter a number from 1 to 6.")
