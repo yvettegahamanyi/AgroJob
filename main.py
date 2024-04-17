@@ -79,7 +79,7 @@ class Farm:
 
         try:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM cultivating_farm")
+            cursor.execute("SELECT province, district, land_size, additional_info, status FROM cultivating_farm")
             rows = cursor.fetchall()
 
             if not rows:
@@ -88,7 +88,7 @@ class Farm:
 
             # Create a PrettyTable to display the data in a tabular format
             table = PrettyTable()
-            table.field_names = ["ID", "Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+            table.field_names = ["Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
 
             for row in rows:
                 table.add_row(row)
