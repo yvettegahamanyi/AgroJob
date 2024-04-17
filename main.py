@@ -69,7 +69,20 @@ class Farm:
     
 def register_farm(conn):
     cursor = conn.cursor()
-    create_farm_table(cursor)
+    # create_farm_table(cursor)
+    
+    create_table_query = """
+        CREATE TABLE IF NOT EXISTS cultivating_farm (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        owner_names VARCHAR(255) NOT NULL,
+        province VARCHAR(255) NOT NULL,
+        district VARCHAR(255) NOT NULL,
+        land_size FLOAT NOT NULL,
+        contact_info VARCHAR(20) NOT NULL,
+        additional_info TEXT
+        )
+        """
+    cursor.execute(create_table_query)
 
     # Prompt user for full names of the land owner
     while True:
