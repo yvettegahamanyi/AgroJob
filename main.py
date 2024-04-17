@@ -18,6 +18,38 @@ def connect_to_database():
     except mysql.connector.Error as e:
         print(f"Error connecting to MySQL database: {e}")
         return None
+    
+class BookedFarm:
+    def __init__(self, owner_names, province, district, land_size, contact_info):
+        self.owner_names = owner_names
+        self.province = province
+        self.district = district
+        self.land_size = land_size
+        self.contact_info = contact_info
+        
+def send_email(user, farm):
+    # Email configurations
+    sender_email = user.get_email()
+    subject = "Farm Booking Confirmation"
+    
+    # Customize email message
+    message = f"Dear {user.get_name()},\n\nThank you for booking the land!\n\nFarm Details:\nOwner Name(s): {', '.join(farm.owner_names)}\nProvince: {farm.province}\nDistrict: {farm.district}\nLand Size: {farm.land_size}\nContact Information: {farm.contact_info}\n\nWe will contact you shortly for further process.\n\nBest regards,\nYour Farm Booking Team"
+
+    # Create message container
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = user.get_email()
+    msg['Subject'] = subject
+
+    # Attach message
+    msg.attach(MIMEText(message, 'plain'))
+
+    # Connect to SMTP server and send email
+    with smtplib.SMTP('smtp.example.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, password)
+        server.send_message(msg)
+        
 class Farm:
     def __init__(self):
         self.connection = self.connect_to_database()
