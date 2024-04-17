@@ -101,7 +101,7 @@ class Farm:
 
         try:
             cursor = connection.cursor()
-            cursor.execute("SELECT province, district, land_size, additional_info, status FROM cultivating_farm")
+            cursor.execute("SELECT id, province, district, land_size, additional_info, status FROM cultivating_farm")
             rows = cursor.fetchall()
 
             if not rows:
@@ -110,7 +110,7 @@ class Farm:
 
             # Create a PrettyTable to display the data in a tabular format
             table = PrettyTable()
-            table.field_names = ["Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
+            table.field_names = ["ID", "Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
 
             for row in rows:
                 table.add_row(row)
@@ -121,32 +121,81 @@ class Farm:
         except mysql.connector.Error as e:
             print(f"Error fetching data from MySQL database: {e}")
 
-
-
-def view_farm_by_id(connection):
+def get_user_by_id(connection, user_id):
     try:
         cursor = connection.cursor(dictionary=True)
-        farm_id = input("Enter the id to view the farm: ")
-    
-        cursor.execute("SELECT * FROM cultivating_farm WHERE id LIKE %s", (farm_id))
-        farm = cursor.fetchone()
-        if farm:
-            contact_info = result['contact_info']
-            global farm_details
-            farm_details = BookedFarm(farm[5], farm[2], farm[3], farm[4])
-            print("\n")
-        else:
-            print("\nFarm not found.\n")
 
+
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_data = cursor.fetchone()
+        cursor.close()
+        
+        if user_data:
+            # Extract user information from the database
+            id = user_data["id"]
+            name = user_data["name"]
+            email = user_data["email"]
+            user_type = user_data["type"]
+            
+            # Create a User object and return it
+            return User(id, name, email, user_type)
+        else:
+            # User with the provided ID does not exist
+            print("User not found.")
+            return None
+        
     except mysql.connector.Error as e:
-        print(f"Error fetching data from MySQL database: {e}")
+        print(f"Error retrieving user data: {e}")
+        return None
+
+def view_farm_by_id(connection):
+    while True:
+        try:
+            cursor = connection.cursor()
+            farm_id = input("Enter the id to book the farm (or type 'cancel' to cancel): ")
+            if farm_id == 'cancel':
+                print("Operation cancelled.")
+                return
+            
+            # Check if farm_id is an integer
+            if not farm_id.isdigit():
+                print("Please enter a valid integer id.")
+                continue
+            
+            # Convert farm_id to integer
+            farm_id = int(farm_id)
+        
+            cursor.execute("SELECT * FROM cultivating_farm WHERE id = %s", (farm_id,))
+            farm = cursor.fetchone()
+            
+            if farm:
+                status = farm[7]
+                if status == 'booked':
+                    print("This farm is already booked.")
+                else:
+                    global farm_details
+                    farm_details = BookedFarm(farm[5], farm[2], farm[3], farm[4])
+                    update_query = "UPDATE cultivating_farm SET status = 'booked' WHERE id = %s"
+                    cursor.execute(update_query, (farm_id,))
+                    connection.commit()
+                    # print("Farm booked successfully! Check your email for further process")
+                    user = get_user_by_id(connection, farm[1])
+                    print(f"Farm booked successfully!\nGoing forward please contact the {user.get_name()}(farm owner) using : ({farm[5]})")
+
+                    break
+                print("\n")
+            else:
+                print("\nFarm not found.\n")
+
+        except pymysql.Error as e:
+            print(f"Error fetching data from MySQL database: {e}")
 
         
 def book_farm(connection):
 
     Farm.view_available_cultivable_land(connection)
-    # view_farm_by_id(connection)
-    send_email(logged_in_user, farm_details)
+    view_farm_by_id(connection)
+    # send_email(logged_in_user, farm_details)
         
 # Function to register a farm
 def register_farm(conn):
@@ -268,8 +317,18 @@ def search_crop_guide(connection):
             table = PrettyTable()
             table.field_names = ["Crop Name", "Growing Conditions", "Planting Care", "Pest Management", "Harvest Storage"]
             for result in results:
-                table.add_row([result["crop_name"], result["growing_conditions"], result["planting_care"], result["pest_management"], result["harvest_storage"]])
-            print(table)
+                print(f"\n\nCrop Name: {result['crop_name'].upper()}\n")
+                print("Growing Conditions:")
+                print(result["growing_conditions"])
+                print("\nPlanting & Care:")
+                print(result["planting_care"])
+                print("\nPest Management:")
+                print(result["pest_management"])
+                print("\nHarvest & Storage:")
+                print(result["harvest_storage"])
+                print("\n" + "-" * 80)  # Draw a long line after each crop guide
+                # table.add_row([result["crop_name"], result["growing_conditions"], result["planting_care"], result["pest_management"], result["harvest_storage"]])
+            # print(table)
             print("\n")
         else:
             print("\nNo crop guide found matching the keyword.\n")
@@ -589,7 +648,7 @@ def main():
         print("8. Login to AgroJob") 
         print("9. Exit")
 
-        choice = input("Enter your choice (1-7): ")
+        choice = input("Enter your choice (1-9): ")
 
         if choice == "1":
            Farm.view_available_cultivable_land(connection)
