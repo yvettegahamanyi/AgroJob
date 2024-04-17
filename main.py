@@ -2,6 +2,9 @@
 
 import mysql.connector
 from prettytable import PrettyTable
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class User:
     def __init__(self, id, name, email, user_type):
@@ -41,7 +44,7 @@ def connect_to_database():
         return None
     
 class BookedFarm:
-    def __init__(self, owner_names, province, district, land_size, contact_info):
+    def __init__(self, province, district, land_size, contact_info):
         self.owner_names = owner_names
         self.province = province
         self.district = district
@@ -58,17 +61,21 @@ def send_email(user, farm):
 
     # Create message container
     msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = user.get_email()
+    msg['From'] = "agrojob99@gmail.com"
+    msg['To'] = sender_email
     msg['Subject'] = subject
 
     # Attach message
     msg.attach(MIMEText(message, 'plain'))
 
     # Connect to SMTP server and send email
-    with smtplib.SMTP('smtp.example.com', 587) as server:
-        server.starttls()
-        server.login(sender_email, password)
+     # Authenticate with OAuth 2.0
+    credentials = service_account.Credentials.from_service_account_file('credentials.json', scopes=['https://mail.google.com/'])
+    access_token = credentials.token
+
+    # Connect to Gmail's SMTP server
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(sender_email, access_token)
         server.send_message(msg)
         
 class Farm:
@@ -99,32 +106,42 @@ class Farm:
         except mysql.connector.Error as e:
             print(f"Error fetching data from MySQL database: {e}")
             
-            
-    def book_farm(connection):
-
+    
+    def view_farm_by_id(connection):
         try:
-            cursor = connection.cursor()
-            cursor.execute("SELECT * FROM cultivating_farm")
-            rows = cursor.fetchall()
+            cursor = connection.cursor(dictionary=True)
+            search_query = input("Enter the id to view the farm: ")
 
-            if not rows:
-                print("No cultivable land available.")
-                return
+            search_query = f"%{search_query}%"  # Wildcard search
 
-            # Create a PrettyTable to display the data in a tabular format
-            table = PrettyTable()
-            table.field_names = ["ID", "Owner's I(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+            select_query = """
+            SELECT contact_info, province, district, land_size, additional_info, status FROM cultivating_farm
+            WHERE id LIKE %s
+            """
+            cursor.execute(select_query, (search_query))
+            results = cursor.fetchall()
 
-            for row in rows:
-                table.add_row(row)
-
-            print(table)
-        
-        farm_id=input("Enter Farm Id: ")
-        
+            if results:
+                table = PrettyTable()
+                table.field_names = ["Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
+                for result in results:
+                    contact_info = result['contact_info']
+                    farm_details = BookedFarm(contact_info,result["province"], result["district"], result["land_size"], result["additional_info"], result["status"])
+                    table.add_row([result["province"], result["district"], result["land_size"], result["additional_info"], result["status"]])
+                print(table)
+                print("\n")
+            else:
+                print("\nFarm not found.\n")
 
         except mysql.connector.Error as e:
             print(f"Error fetching data from MySQL database: {e}")
+
+        
+    def book_farm(connection):
+
+        Farm.view_available_cultivable_land(connection)
+        Farm.view_farm_by_id(connection)
+        send_email(logged_in_user, farm_details)
 
 
     
