@@ -259,7 +259,7 @@ def crop_guide(conn):
 
 def view_crop_guides(connection):
     try:
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
         cursor.execute("SELECT * FROM crop_guide")
         rows = cursor.fetchall()
 
@@ -267,14 +267,18 @@ def view_crop_guides(connection):
             print("No crop guides available.")
             return
 
-        # Create a PrettyTable to display the data in a tabular format
-        table = PrettyTable()
-        table.field_names = ["ID", "Crop Name", "Growing conditions", "Planting Care", "Pest Management", "Harvest Storage"]
-
+        # Iterate through each crop guide
         for row in rows:
-            table.add_row(row)
-
-        print(table)
+            print(f"\n\nCrop Name: {row['crop_name'].upper()}\n")
+            print("Growing Conditions:")
+            print(row["growing_conditions"])
+            print("\nPlanting & Care:")
+            print(row["planting_care"])
+            print("\nPest Management:")
+            print(row["pest_management"])
+            print("\nHarvest & Storage:")
+            print(row["harvest_storage"])
+            print("\n" + "-" * 80)  # Draw a long line after each crop guide
 
     except mysql.connector.Error as e:
         print(f"Error fetching data from MySQL database: {e}")
@@ -360,6 +364,63 @@ def create_account(connection):
     connection.commit()
     print("Account created successfully.")
 
+
+def mark_cultivable_land(connection):
+    try:
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch cultivable lands owned by the logged-in user
+        cursor.execute("SELECT id, province, district, land_size, additional_info, status FROM cultivating_farm WHERE owner_id = %s", (logged_in_user.get_id(),))
+        rows = cursor.fetchall()
+
+        if not rows:
+            print("You have no cultivable land registered.")
+            return
+
+        # Display cultivable lands owned by the user in a table
+        print("Your cultivable lands:")
+        table = PrettyTable()
+        table.field_names = ["ID", "Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
+        for row in rows:
+            table.add_row([row["id"], row["province"], row["district"], row["land_size"], row["additional_info"], row["status"]])
+        print(table)
+
+        # Ask the user to choose the ID of the cultivable land to update
+        while True:
+            chosen_id = input("Enter the ID of the cultivable land you want to mark as available/taken (or type 'cancel' to cancel): ").strip().lower()
+            if chosen_id == 'cancel':
+                print("Operation cancelled.")
+                return
+            if chosen_id.isdigit():
+                chosen_id = int(chosen_id)
+                if any(row["id"] == chosen_id for row in rows):
+                    break
+                else:
+                    print("Invalid ID. Please enter a valid ID from the table.")
+            else:
+                print("Invalid input. Please enter a valid numeric ID.")
+
+        # Ask the user to choose the status
+        while True:
+            new_status = input("Choose the status (1. available / 2. taken): ").strip()
+            if new_status == '1':
+                new_status = 'available'
+                break
+            elif new_status == '2':
+                new_status = 'taken'
+                break
+            else:
+                print("Invalid choice. Please enter 1 or 2.")
+
+        # Update the status of the chosen cultivable land
+        update_query = "UPDATE cultivating_farm SET status = %s WHERE id = %s"
+        cursor.execute(update_query, (new_status, chosen_id))
+        connection.commit()
+        print("Cultivable land status updated successfully.")
+
+    except mysql.connector.Error as e:
+        print(f"Error updating cultivable land status: {e}")
+        
 def login(connection):
     cursor = connection.cursor()
     print("------ Login ------")
@@ -387,7 +448,7 @@ def login(connection):
                 if owner_choice == "1":
                     register_farm(connection)
                 elif owner_choice == "2":
-                    mark_cultivable_land()
+                    mark_cultivable_land(connection)
                 elif owner_choice == "3":
                     print("Logging out...")
                     break
