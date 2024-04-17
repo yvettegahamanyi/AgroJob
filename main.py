@@ -5,6 +5,7 @@ from prettytable import PrettyTable
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from google.oauth2 import service_account
 
 class User:
     def __init__(self, id, name, email, user_type):
@@ -27,14 +28,15 @@ class User:
     
 
 logged_in_user = None
+farm_details = None  
 
 def connect_to_database():
     try:
         conn = mysql.connector.connect(
-            host="sql11.freemysqlhosting.net",
-            user="sql11698952",
-            password="DMwqmetqsW",
-            database="sql11698952",
+            host="localhost",
+            user="AgroJob",
+            password="Agro@123Job",
+            database="AgroJob",
             port = 3306
         )
         print("Connected to MySQL database")
@@ -44,24 +46,36 @@ def connect_to_database():
         return None
     
 class BookedFarm:
-    def __init__(self, province, district, land_size, contact_info):
-        self.owner_names = owner_names
+    def __init__(self, contact_info, province, district, land_size):
         self.province = province
         self.district = district
         self.land_size = land_size
         self.contact_info = contact_info
+
+    def get_province(self):
+        return self.province
+
+    def get_district(self):
+        return self.district
+    
+    def get_land_size(self):
+        return self.land_size
+    
+    def get_contact_info(self):
+        return self.contact_info
         
-def send_email(user, farm):
+def send_email(user, farm_details):
     # Email configurations
     sender_email = user.get_email()
     subject = "Farm Booking Confirmation"
     
     # Customize email message
-    message = f"Dear {user.get_name()},\n\nThank you for booking the land!\n\nFarm Details:\nOwner Name(s): {', '.join(farm.owner_names)}\nProvince: {farm.province}\nDistrict: {farm.district}\nLand Size: {farm.land_size}\nContact Information: {farm.contact_info}\n\nWe will contact you shortly for further process.\n\nBest regards,\nYour Farm Booking Team"
+    message = f"Dear {user.get_name()},\n\nThank you for booking the land!\n\nFarm Details:\nProvince: "
+    # {farm_details.get_province()}\nDistrict: {farm_details.get_district()}\nLand Size: {farm_details.get_land_size()}\nContact Information: {farm_details.get_contact_info()}\n\nWe will contact you shortly for further process.\n\nBest regards,\nYour Farm Booking Team"
 
     # Create message container
     msg = MIMEMultipart()
-    msg['From'] = "agrojob99@gmail.com"
+    msg['From'] = "agrojob@reflected-coder-420615.iam.gserviceaccount.com"
     msg['To'] = sender_email
     msg['Subject'] = subject
 
@@ -70,14 +84,15 @@ def send_email(user, farm):
 
     # Connect to SMTP server and send email
      # Authenticate with OAuth 2.0
-    credentials = service_account.Credentials.from_service_account_file('credentials.json', scopes=['https://mail.google.com/'])
+    credentials = service_account.Credentials.from_service_account_file('credentials.json')
     access_token = credentials.token
 
     # Connect to Gmail's SMTP server
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(sender_email, access_token)
         server.send_message(msg)
-        
+    print("Email sent successfully!")
+
 class Farm:
     def __init__(self):
         self.connection = self.connect_to_database()
@@ -105,46 +120,34 @@ class Farm:
 
         except mysql.connector.Error as e:
             print(f"Error fetching data from MySQL database: {e}")
-            
+
+
+
+def view_farm_by_id(connection):
+    try:
+        cursor = connection.cursor(dictionary=True)
+        farm_id = input("Enter the id to view the farm: ")
     
-    def view_farm_by_id(connection):
-        try:
-            cursor = connection.cursor(dictionary=True)
-            search_query = input("Enter the id to view the farm: ")
+        cursor.execute("SELECT * FROM cultivating_farm WHERE id LIKE %s", (farm_id))
+        farm = cursor.fetchone()
+        if farm:
+            contact_info = result['contact_info']
+            global farm_details
+            farm_details = BookedFarm(farm[5], farm[2], farm[3], farm[4])
+            print("\n")
+        else:
+            print("\nFarm not found.\n")
 
-            search_query = f"%{search_query}%"  # Wildcard search
-
-            select_query = """
-            SELECT contact_info, province, district, land_size, additional_info, status FROM cultivating_farm
-            WHERE id LIKE %s
-            """
-            cursor.execute(select_query, (search_query))
-            results = cursor.fetchall()
-
-            if results:
-                table = PrettyTable()
-                table.field_names = ["Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
-                for result in results:
-                    contact_info = result['contact_info']
-                    farm_details = BookedFarm(contact_info,result["province"], result["district"], result["land_size"], result["additional_info"], result["status"])
-                    table.add_row([result["province"], result["district"], result["land_size"], result["additional_info"], result["status"]])
-                print(table)
-                print("\n")
-            else:
-                print("\nFarm not found.\n")
-
-        except mysql.connector.Error as e:
-            print(f"Error fetching data from MySQL database: {e}")
+    except mysql.connector.Error as e:
+        print(f"Error fetching data from MySQL database: {e}")
 
         
-    def book_farm(connection):
+def book_farm(connection):
 
-        Farm.view_available_cultivable_land(connection)
-        Farm.view_farm_by_id(connection)
-        send_email(logged_in_user, farm_details)
-
-
-    
+    Farm.view_available_cultivable_land(connection)
+    # view_farm_by_id(connection)
+    send_email(logged_in_user, farm_details)
+        
 # Function to register a farm
 def register_farm(conn):
     cursor = conn.cursor()
@@ -510,7 +513,6 @@ def login(connection):
     if user:
         print("Login successful.")
         logged_in_user = User( user[0], user[1], user[2], user[4])
-        loggedIn 
         user_type = user[4]  # Assuming user type is stored in the fifth column
         if user_type == "farmOwner":
             print("Welcome, Farm Owner!")
@@ -542,7 +544,7 @@ def login(connection):
                 tenant_choice = input("Enter your choice (1-2): ")
                 
                 if tenant_choice == "1":
-                    book_cultivable_land()
+                    book_farm(connection)
                 elif tenant_choice == "2":
                     print("Logging out...")
                     break
@@ -585,10 +587,7 @@ def main():
         print("6. Search crop guide")
         print("7. Create an Account")
         print("8. Login to AgroJob") 
-        # Check user type and add booking option for farmTenants
-        if logged_in_user.get_user_type() == "farmTenant":
-            print("9. Book a farm")
-        print("10. Exit")
+        print("9. Exit")
 
         choice = input("Enter your choice (1-7): ")
 
@@ -606,12 +605,10 @@ def main():
         elif choice == "6":
             search_crop_guide(connection)
         elif choice == "7":
-            delete_table_cultivating_farm(connection)
+            create_account(connection)
         elif choice == "8":
             login(connection)
         elif choice == "9":
-            book_farm(connection)
-        elif choice == "10":
             print("Exiting the application...")
             feedback = input("Did you enjoy using the program? (yes/no): ").lower()
             if feedback == "yes":
