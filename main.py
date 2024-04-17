@@ -4,10 +4,11 @@ import mysql.connector
 from prettytable import PrettyTable
 
 class User:
-    def __init__(self, id, name, email):
+    def __init__(self, id, name, email, user_type):
         self.id = id
         self.email = email
         self.name = name
+        self.user_type = user_type
 
     def get_email(self):
         return self.email
@@ -17,6 +18,10 @@ class User:
     
     def get_id(self):
         return self.id
+    
+    def user_type(self):
+        return self.user_type
+    
 
 logged_in_user = None
 
@@ -93,7 +98,33 @@ class Farm:
 
         except mysql.connector.Error as e:
             print(f"Error fetching data from MySQL database: {e}")
+            
+            
+    def book_farm(connection):
+
+        try:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM cultivating_farm")
+            rows = cursor.fetchall()
+
+            if not rows:
+                print("No cultivable land available.")
+                return
+
+            # Create a PrettyTable to display the data in a tabular format
+            table = PrettyTable()
+            table.field_names = ["ID", "Owner's I(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+
+            for row in rows:
+                table.add_row(row)
+
+            print(table)
         
+        farm_id=input("Enter Farm Id: ")
+        
+
+        except mysql.connector.Error as e:
+            print(f"Error fetching data from MySQL database: {e}")
 
 
     
@@ -311,10 +342,6 @@ def view_crop_guides(connection):
     except mysql.connector.Error as e:
         print(f"Error fetching data from MySQL database: {e}")
 
-
-def update_crop_guide():
-    print("Update Crop Guide:"
-            )
 def update_crop_guide(conn, crop_name):
     cursor = conn.cursor()
     # cursor.execute()
@@ -404,7 +431,8 @@ def login(connection):
     global logged_in_user
     if user:
         print("Login successful.")
-        logged_in_user = User( user[0], user[1], user[2])
+        logged_in_user = User( user[0], user[1], user[2], user[4])
+        loggedIn 
         user_type = user[4]  # Assuming user type is stored in the fifth column
         if user_type == "farmOwner":
             print("Welcome, Farm Owner!")
@@ -478,8 +506,11 @@ def main():
         print("5. Update crop guide")
         print("6. Search crop guide")
         print("7. Create an Account")
-        print("8. Login to AgroJob")
-        print("9. Exit")
+        print("8. Login to AgroJob") 
+        # Check user type and add booking option for farmTenants
+        if logged_in_user.get_user_type() == "farmTenant":
+            print("9. Book a farm")
+        print("10. Exit")
 
         choice = input("Enter your choice (1-7): ")
 
@@ -501,6 +532,8 @@ def main():
         elif choice == "8":
             login(connection)
         elif choice == "9":
+            book_farm(connection)
+        elif choice == "10":
             print("Exiting the application...")
             feedback = input("Did you enjoy using the program? (yes/no): ").lower()
             if feedback == "yes":
