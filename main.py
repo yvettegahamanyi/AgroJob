@@ -422,10 +422,10 @@ def delete_table_cultivating_farm(connection):
     try:
         cursor = connection.cursor()
         # SQL query to drop the table
-        drop_table_query = "DROP TABLE IF EXISTS crop_guide"
+        drop_table_query = "DROP TABLE IF EXISTS cultivating_farm"
         cursor.execute(drop_table_query)
         connection.commit()
-        print("Table 'crop_guide' deleted successfully")
+        print("Table 'cultivating_farm' deleted successfully")
     except mysql.connector.Error as e:
         print(f"Error deleting table: {e}")
         
@@ -465,7 +465,7 @@ def main():
         elif choice == "6":
             search_crop_guide(connection)
         elif choice == "7":
-            create_account(connection)
+            delete_table_cultivating_farm(connection)
         elif choice == "8":
             login(connection)
         elif choice == "9":
