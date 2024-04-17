@@ -2,7 +2,23 @@
 
 import mysql.connector
 from prettytable import PrettyTable
-registered_farms = []
+
+class User:
+    def __init__(self, id, name, email):
+        self.id = id
+        self.email = email
+        self.name = name
+
+    def get_email(self):
+        return self.email
+
+    def get_name(self):
+        return self.name
+    
+    def get_id(self):
+        return self.id
+
+logged_in_user = None
 
 def connect_to_database():
     try:
@@ -48,49 +64,26 @@ class Farm:
         
 
 
-    def create_farm_table(cursor):
-
-        create_table_query = """
-        CREATE TABLE IF NOT EXISTS cultivating_farm (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        owner_names VARCHAR(255) NOT NULL,
-        province VARCHAR(255) NOT NULL,
-        district VARCHAR(255) NOT NULL,
-        land_size FLOAT NOT NULL,
-        contact_info VARCHAR(20) NOT NULL,
-        additional_info TEXT
-        )
-        """
-        cursor.execute(create_table_query)
-        print("Table 'cultivating_farm' created successfully")
-
     
 # Function to register a farm
-    
 def register_farm(conn):
     cursor = conn.cursor()
     # create_farm_table(cursor)
     
     create_table_query = """
-        CREATE TABLE IF NOT EXISTS cultivating_farm (
+    CREATE TABLE IF NOT EXISTS cultivating_farm (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        owner_names VARCHAR(255) NOT NULL,
+        owner_id INT,
         province VARCHAR(255) NOT NULL,
         district VARCHAR(255) NOT NULL,
         land_size FLOAT NOT NULL,
         contact_info VARCHAR(20) NOT NULL,
-        additional_info TEXT
-        )
-        """
+        additional_info TEXT,
+        status VARCHAR(200) NOT NULL,
+        FOREIGN KEY (owner_id) REFERENCES users(id)
+    )
+    """
     cursor.execute(create_table_query)
-
-    # Prompt user for full names of the land owner
-    while True:
-        owner_names = input('Enter the full names of the land owner (at least 2 names): ').strip()
-        if len(owner_names.split()) >= 2 and all(name.isalpha() for name in owner_names.split()):
-            break
-        else:
-            print("Please enter at least 2 names (alphabetical characters only).")
 
     # Dictionary of provinces and corresponding districts
     province_districts = {
@@ -135,10 +128,10 @@ def register_farm(conn):
 
     # Insert farm details into the database
     insert_query = """
-    INSERT INTO cultivating_farm (owner_names, province, district, land_size, contact_info, additional_info)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    INSERT INTO cultivating_farm (owner_id, province, district, land_size, contact_info, additional_info, status)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
-    farm_data = (owner_names, land_province, land_district, float(land_size), contact_info, additional_info)
+    farm_data = (logged_in_user.get_id(), land_province, land_district, float(land_size), contact_info, additional_info, "available")
     cursor.execute(insert_query, farm_data)
     conn.commit()
     print("Registered Farm inserted into the database successfully")
@@ -156,7 +149,7 @@ def search_farms(connection):
     search_query = f"%{search_query}%"  # Wildcard search
     select_query = """
     SELECT * FROM cultivating_farm
-    WHERE owner_names LIKE %s OR province LIKE %s OR district LIKE %s OR land_size LIKE %s OR contact_info LIKE %s OR additional_info LIKE %s
+    WHERE  province LIKE %s OR district LIKE %s OR land_size LIKE %s OR contact_info LIKE %s OR additional_info LIKE %s
     """
     cursor.execute(select_query, (search_query, search_query, search_query, search_query, search_query, search_query))
     found_farms = cursor.fetchall()
@@ -165,9 +158,9 @@ def search_farms(connection):
     if found_farms:
         print("\nFound farms matching the keyword:\n")
         table = PrettyTable()
-        table.field_names = ["Owner's Name(s)", "Province", "District", "Size of Land (Hectares)", "Contact Information", "Additional Information"]
+        table.field_names = ["Province", "District", "Size of Land (Hectares)", "Additional Information", "Status"]
         for found_farm in found_farms:
-            table.add_row([found_farm["owner_names"], found_farm["province"], found_farm["district"], found_farm["land_size"], found_farm["contact_info"], found_farm["additional_info"]])
+            table.add_row([found_farm["province"], found_farm["district"], found_farm["land_size"], found_farm["additional_info"],found_farm["status"] ])
         print(table)
     else:
         print("\nNo farms found matching the keyword.\n")
@@ -320,7 +313,122 @@ def update_crop_guide(conn, crop_name):
         print("\nCrop guide updated successfully!")
     else:
         print(f"Error: {crop_name} does not exist in the crop guide.")
+        
+def create_account(connection):
+    cursor = connection.cursor()
+    
+    create_table_query = """
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        type ENUM('farmOwner', 'farmTenant') NOT NULL
+    )
+    """
+    cursor.execute(create_table_query)
+    
+    print("------ Create Account ------")
+    name = input("Enter your name: ")
+    email = input("Enter a Email: ")
+    password = input("Enter a password: ")
 
+    # Prompt user to choose user type
+    print("Select your type:")
+    print("1. Farm Owner")
+    print("2. Farm Tenant")
+    choice = input("Enter your choice (1 or 2): ")
+    if choice == "1":
+        user_type = "farmOwner"
+    elif choice == "2":
+        user_type = "farmTenant"
+    else:
+        print("Invalid choice. Please select 1 or 2.")
+        return
+
+    # Check if the email already exists
+    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+    existing_user = cursor.fetchone()
+    if existing_user:
+        print("Email already exists. Please choose a different email.")
+        return
+
+    # Insert new user into the database
+    insert_query = "INSERT INTO users (name, email, password, type) VALUES (%s, %s, %s, %s)"
+    user_data = (name, email, password, user_type)
+    cursor.execute(insert_query, user_data)
+    connection.commit()
+    print("Account created successfully.")
+
+def login(connection):
+    cursor = connection.cursor()
+    print("------ Login ------")
+    email = input("Enter your email: ")
+    password = input("Enter your password: ")
+
+    # Check if the email and password match
+    cursor.execute("SELECT * FROM users WHERE email = %s AND password = %s", (email, password))
+    user = cursor.fetchone()
+    global logged_in_user
+    if user:
+        print("Login successful.")
+        logged_in_user = User( user[0], user[1], user[2])
+        user_type = user[4]  # Assuming user type is stored in the fifth column
+        if user_type == "farmOwner":
+            print("Welcome, Farm Owner!")
+            while True:
+                print("------ Farm Owner Menu ------")
+                print("1. Register cultivable land")
+                print("2. Mark cultivable land as available or taken")
+                print("3. Log out")
+                
+                owner_choice = input("Enter your choice (1-4): ")
+                
+                if owner_choice == "1":
+                    register_farm(connection)
+                elif owner_choice == "2":
+                    mark_cultivable_land()
+                elif owner_choice == "3":
+                    print("Logging out...")
+                    break
+                else:
+                    print("Invalid choice. Please enter a number from 1 to 3.")
+
+        elif user_type == "farmTenant":
+            print("Welcome, Farm Tenant!")
+            while True:
+                print("------ Farm Tenant Menu ------")
+                print("1. Book cultivable land")
+                print("2. Log out")
+                
+                tenant_choice = input("Enter your choice (1-2): ")
+                
+                if tenant_choice == "1":
+                    book_cultivable_land()
+                elif tenant_choice == "2":
+                    print("Logging out...")
+                    break
+                else:
+                    print("Invalid choice. Please enter a number from 1 to 2.")
+
+        else:
+            print("Invalid user type.")
+    else:
+        print("Invalid email or password.")
+
+    cursor.close()
+
+def delete_table_cultivating_farm(connection):
+    try:
+        cursor = connection.cursor()
+        # SQL query to drop the table
+        drop_table_query = "DROP TABLE IF EXISTS crop_guide"
+        cursor.execute(drop_table_query)
+        connection.commit()
+        print("Table 'crop_guide' deleted successfully")
+    except mysql.connector.Error as e:
+        print(f"Error deleting table: {e}")
+        
 def main():
     # Establish database connection
     connection = connect_to_database()
@@ -330,34 +438,37 @@ def main():
 
     # Menu-driven application
     while True:
-        print("------ Agrojob Menu ------")
+        print("------ AgroJob Menu ------")
         print("1. View available cultivable land")
-        print("2. Register a cultivable land")
-        print("3. Search for farms in different locations")
-        print("4. Create Crop guide")
-        print("5. View all crop guides")
-        print("6. Update crop guide")
-        print("7. Search crop guide")
-        print("8. Exit")
+        print("2. Search for farms in different locations")
+        print("3. Create Crop guide")
+        print("4. View all crop guides")
+        print("5. Update crop guide")
+        print("6. Search crop guide")
+        print("7. Create an Account")
+        print("8. Login to AgroJob")
+        print("9. Exit")
 
         choice = input("Enter your choice (1-7): ")
 
         if choice == "1":
            Farm.view_available_cultivable_land(connection)
         elif choice == "2":
-            register_farm(connection)
-        elif choice == "3":
             search_farms(connection)
-        elif choice == "4":
+        elif choice == "3":
             crop_guide(connection)
-        elif choice == "5":
+        elif choice == "4":
             view_crop_guides(connection)
-        elif choice == "6":
+        elif choice == "5":
             crop_name=input("Enter crop name: ")
             update_crop_guide(connection,crop_name)
-        elif choice == "7":
+        elif choice == "6":
             search_crop_guide(connection)
+        elif choice == "7":
+            create_account(connection)
         elif choice == "8":
+            login(connection)
+        elif choice == "9":
             print("Exiting the application...")
             feedback = input("Did you enjoy using the program? (yes/no): ").lower()
             if feedback == "yes":
